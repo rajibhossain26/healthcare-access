@@ -1,0 +1,48 @@
+name: publish
+
+# Builds the package on every push (so packaging problems show up early) and
+# publishes to PyPI when a GitHub release is published. Publishing uses PyPI
+# trusted publishing: no API token is stored in the repository.
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build
+      - run: twine check --strict dist/*
+      - name: Smoke-test the built wheel
+        run: |
+          python -m venv /tmp/venv
+          /tmp/venv/bin/pip install dist/*.whl
+          cd /tmp && /tmp/venv/bin/python -c "import healthaccess as ha, pandas as pd; print(ha.__version__); print(ha.two_step_fca(pd.Series({'A': 100, 'B': 300}), pd.Series({'X': 2, 'Y': 1}), pd.DataFrame({'X': [5, 15], 'Y': [25, 8]}, index=['A', 'B']), threshold=20) * 1000)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  pypi:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/healthcare-access
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

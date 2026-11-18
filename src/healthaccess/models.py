@@ -29,6 +29,8 @@ __all__ = [
     "enhanced_2sfca",
     "gaussian_2sfca",
     "gravity",
+    "three_step_fca",
+    "modified_2sfca",
     "nearest_provider_cost",
     "providers_within",
 ]
@@ -130,6 +132,62 @@ def gravity(demand, supply, cost, beta: float = 1.5, min_cost: float = 1.0) -> p
     Equivalent to an FCA model with power decay and no catchment limit.
     """
     return fca(demand, supply, cost, _decay.power(beta, min_cost=min_cost), name="access_gravity")
+
+
+def three_step_fca(
+    demand,
+    supply,
+    cost,
+    breaks=(10.0, 20.0, 30.0),
+    weights=(1.0, 0.68, 0.22),
+    decay_fn=None,
+) -> pd.Series:
+    """Three-step FCA (Wan, Zou & Sternberg 2012).
+
+    Adds a selection weight so that people who can reach several providers
+    are not counted in full by each of them:
+
+        G_ij = W_ij / sum_k W_ik                     (selection weights)
+        R_j  = S_j / sum_i G_ij P_i W_ij             (step 2)
+        A_i  = sum_j G_ij R_j W_ij                   (step 3)
+
+    ``W`` is stepwise decay by default (as in the original paper); pass
+    ``decay_fn`` to use any other decay. Like 2SFCA, total supply is
+    conserved: sum_i P_i A_i equals the capacity of every provider with demand.
+    """
+    pop, cap, matrix = align(demand, supply, cost)
+    w = (decay_fn or _decay.stepwise(breaks, weights))(matrix)
+    row = w.sum(axis=1, keepdims=True)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        g = np.where(row > 0, w / row, 0.0)
+        weighted_demand = (g * pop[:, None] * w).sum(axis=0)
+        ratio = np.where(weighted_demand > 0, cap / weighted_demand, 0.0)
+    access = (g * w) @ ratio
+    return pd.Series(access, index=demand.index, name="access_3sfca")
+
+
+def modified_2sfca(demand, supply, cost, threshold: float | None = None, decay_fn=None) -> pd.Series:
+    """Modified 2SFCA (Delamater 2013).
+
+        R_j = S_j / sum_k P_k W_kj
+        A_i = sum_j R_j W_ij^2
+
+    Squaring the weight in the second step means distant providers count for
+    less even when they are uncrowded, which suits places where travel is a
+    real barrier. Unlike 2SFCA, total supply is *not* conserved by design.
+    Uses Gaussian decay with ``threshold`` unless ``decay_fn`` is given.
+    """
+    if decay_fn is None:
+        if threshold is None:
+            raise ValueError("give either threshold or decay_fn")
+        decay_fn = _decay.gaussian(threshold)
+    pop, cap, matrix = align(demand, supply, cost)
+    w = decay_fn(matrix)
+    weighted_demand = (pop[:, None] * w).sum(axis=0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ratio = np.where(weighted_demand > 0, cap / weighted_demand, 0.0)
+    access = (w ** 2) @ ratio
+    return pd.Series(access, index=demand.index, name="access_m2sfca")
 
 
 def nearest_provider_cost(demand, supply, cost) -> pd.Series:

@@ -1,22 +1,38 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "healthaccess"
-version = "0.1.0"
-description = "Spatial accessibility to healthcare: 2SFCA, Enhanced 2SFCA, Gaussian 2SFCA and gravity models"
+name = "healthcare-access"
+version = "0.2.0"
+description = "Spatial accessibility to healthcare: 2SFCA, Enhanced, Gaussian, Modified and Three-step FCA, and gravity models"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
-authors = [{ name = "Rajib Hossain" }]
-keywords = ["GIS", "accessibility", "2SFCA", "health geography", "spatial analysis"]
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Rajib Hossain", email = "rajibhossain2k14@gmail.com" }]
+keywords = ["GIS", "accessibility", "2SFCA", "E2SFCA", "3SFCA", "health geography", "spatial analysis", "floating catchment area"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
 dependencies = ["numpy>=1.22", "pandas>=1.5", "networkx>=2.8"]
 
 [project.optional-dependencies]
 osm = ["osmnx>=1.9"]
 examples = ["matplotlib>=3.6"]
 dev = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/rajibhossain26/healthcare-access"
+Source = "https://github.com/rajibhossain26/healthcare-access"
+Issues = "https://github.com/rajibhossain26/healthcare-access/issues"
+Changelog = "https://github.com/rajibhossain26/healthcare-access/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

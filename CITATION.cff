@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "healthcare-access: spatial accessibility to healthcare in Python"
+type: software
+authors:
+  - family-names: Hossain
+    given-names: Rajib
+    affiliation: University of Georgia
+version: 0.2.0
+date-released: 2026-11-18
+license: MIT
+repository-code: "https://github.com/rajibhossain26/healthcare-access"
+keywords:
+  - accessibility
+  - two-step floating catchment area
+  - health geography
+  - GIS

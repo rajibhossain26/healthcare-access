@@ -98,3 +98,38 @@ def test_rejects_bad_inputs(toy):
         ha.two_step_fca(demand.to_numpy(), supply, cost, threshold=20)
     with pytest.raises(ValueError):
         ha.two_step_fca(demand, supply, -cost, threshold=20)
+
+
+def test_three_step_fca_matches_hand_calculation(toy):
+    demand, supply, cost = toy
+    access = ha.three_step_fca(demand, supply, cost, decay_fn=decay.binary(20))
+    # A reaches only X (G=1); B reaches X and Y (G=0.5 each).
+    # R_X = 2 / (1*100 + 0.5*300) = 0.008 ; R_Y = 1 / (0.5*300) = 1/150
+    assert access["A"] == pytest.approx(0.008)
+    assert access["B"] == pytest.approx(0.5 * 0.008 + 0.5 / 150)
+    # supply conserved: 100*0.008 + 300*(0.004 + 1/300) = 3 physicians
+    assert (access * demand).sum() == pytest.approx(3.0)
+
+
+def test_three_step_fca_default_is_stepwise_and_conserves_supply(toy):
+    demand, supply, cost = toy
+    access = ha.three_step_fca(demand, supply, cost)
+    assert (access * demand).sum() == pytest.approx(supply.sum())
+
+
+def test_modified_2sfca_squares_second_step_weights(toy):
+    demand, supply, cost = toy
+    f = decay.stepwise([10, 20, 30], [1.0, 0.5, 0.25])
+    access = ha.modified_2sfca(demand, supply, cost, decay_fn=f)
+    # W: A-X 1, A-Y 0.25, B-X 0.5, B-Y 1
+    r_x, r_y = 2 / (100 * 1 + 300 * 0.5), 1 / (100 * 0.25 + 300 * 1)
+    assert access["A"] == pytest.approx(r_x * 1 + r_y * 0.25**2)
+    assert access["B"] == pytest.approx(r_x * 0.5**2 + r_y * 1)
+    # with binary decay it equals classic 2SFCA
+    m = ha.modified_2sfca(demand, supply, cost, decay_fn=decay.binary(20))
+    assert m.to_numpy() == pytest.approx(ha.two_step_fca(demand, supply, cost, 20).to_numpy())
+
+
+def test_modified_2sfca_needs_threshold_or_decay(toy):
+    with pytest.raises(ValueError):
+        ha.modified_2sfca(*toy)

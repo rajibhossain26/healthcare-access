@@ -7,13 +7,15 @@ from .models import (
     fca,
     gaussian_2sfca,
     gravity,
+    modified_2sfca,
     nearest_provider_cost,
     provider_to_population_ratios,
     providers_within,
+    three_step_fca,
     two_step_fca,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "decay",
@@ -24,6 +26,8 @@ __all__ = [
     "enhanced_2sfca",
     "gaussian_2sfca",
     "gravity",
+    "three_step_fca",
+    "modified_2sfca",
     "nearest_provider_cost",
     "providers_within",
     "provider_to_population_ratios",
