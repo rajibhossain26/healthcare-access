@@ -6,7 +6,7 @@ authors:
   - family-names: Hossain
     given-names: Rajib
     affiliation: University of Georgia
-version: 0.2.0
+version: 0.2.1
 date-released: 2026-11-18
 license: MIT
 repository-code: "https://github.com/rajibhossain26/healthcare-access"

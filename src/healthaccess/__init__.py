@@ -15,7 +15,7 @@ from .models import (
     two_step_fca,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "decay",

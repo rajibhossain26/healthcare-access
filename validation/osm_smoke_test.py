@@ -3,8 +3,7 @@ then every model, with sanity checks on the results.
 
 Downloads the road network for Winterville, Georgia (a small town east of
 Athens), snaps a few points to it and checks that drive times are finite,
-positive, asymmetric where one-way streets allow, and plausible for a town a
-few kilometres across.
+positive and plausible for a town a few kilometres across.
 """
 
 import numpy as np

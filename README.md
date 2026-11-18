@@ -3,6 +3,7 @@
 **Measure spatial access to healthcare with floating catchment area (FCA) and gravity models, in a few lines of Python.**
 
 [![tests](https://github.com/rajibhossain26/healthcare-access/actions/workflows/tests.yml/badge.svg)](https://github.com/rajibhossain26/healthcare-access/actions/workflows/tests.yml)
+[![validate](https://github.com/rajibhossain26/healthcare-access/actions/workflows/validate.yml/badge.svg)](https://github.com/rajibhossain26/healthcare-access/blob/main/validation/RESULTS.md)
 [![PyPI](https://img.shields.io/pypi/v/healthcare-access)](https://pypi.org/project/healthcare-access/)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
@@ -93,6 +94,16 @@ If you already have a travel-time table from ArcGIS Network Analyst (OD Cost Mat
 - **Gravity** has no hard cutoff and is sensitive to `beta`. It is useful for sensitivity analysis.
 
 The synthetic demo shows why the choice matters. On the same county, the share of residents below a 1:3,500 shortage ratio ranges from 20% to 29% depending on the model.
+
+## Validation
+
+The results are checked three independent ways, all of which run automatically on GitHub Actions:
+
+1. **Against the published equations.** Every model is compared with a separate, deliberately slow loop-by-loop implementation written straight from the original papers ([`tests/reference.py`](https://github.com/rajibhossain26/healthcare-access/blob/main/tests/reference.py)), on 25 random problems each with empty neighbourhoods, unreachable pairs and providers nobody can reach. Further tests check supply conservation, invariance to the order of ids, the Luo & Qi (2009) zone weights and the Dai (2010) Gaussian formula.
+2. **Against other software.** On random problems with 120 locations and 25 providers, results agree with [PySAL `access`](https://pysal.org/access/) (2SFCA, E2SFCA, 3SFCA, gravity, Gaussian-weighted 2SFCA) and [Aceso](https://aceso.readthedocs.io/) (2SFCA, M2SFCA, gravity) to within about 1e-16, i.e. floating-point rounding. **32 of 32 checks pass**; the full table is in [`validation/RESULTS.md`](https://github.com/rajibhossain26/healthcare-access/blob/main/validation/RESULTS.md).
+3. **On a real road network.** A smoke test downloads OpenStreetMap roads for Winterville, Georgia, computes drive times and runs every model, checking that the times and implied speeds are plausible and that supply is accounted for.
+
+Conventions, so results can be compared with other tools: a provider exactly at the catchment edge counts as inside (`cost <= threshold`, as in PySAL); zone edges in Enhanced 2SFCA belong to the nearer zone; unreachable locations get an accessibility of 0.
 
 ## Run the tests
 
