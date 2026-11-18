@@ -86,3 +86,35 @@ def test_share_below_and_groups():
     s = equity.group_summary(access, pop, groups)
     assert s.loc["rural", "weighted_mean_access"] == pytest.approx(0.3)
     assert s.loc["urban", "population"] == 200
+
+
+def test_weighted_gini_matches_mean_absolute_difference_formula():
+    rng = np.random.default_rng(0)
+    for _ in range(5):
+        x = rng.gamma(2.0, 1.0, 60)
+        w = rng.integers(1, 1000, 60).astype(float)
+        total, mean = w.sum(), (w * x).sum() / w.sum()
+        g = (w[:, None] * w[None, :] * np.abs(x[:, None] - x[None, :])).sum() / (2 * total**2 * mean)
+        assert equity.weighted_gini(x, w) == pytest.approx(g, rel=1e-12)
+
+
+def test_missing_access_is_left_out_of_equity_summaries():
+    access = pd.Series({"a": 0.1, "b": np.nan, "c": 0.9})
+    pop = pd.Series({"a": 100, "b": 100, "c": 200})
+    groups = pd.Series({"a": "rural", "b": "rural", "c": "urban"})
+    assert equity.share_below(access, pop, 0.5) == pytest.approx(100 / 300)
+    s = equity.group_summary(access, pop, groups)
+    assert s.loc["rural", "weighted_mean_access"] == pytest.approx(0.1)
+    assert s.loc["rural", "population"] == 100
+
+
+def test_haversine_exact_geometry():
+    # equator to pole is a quarter of a great circle: pi * R / 2
+    d = distance.haversine_matrix([0.0], [0.0], [90.0], [0.0])
+    assert d.iloc[0, 0] == pytest.approx(np.pi * distance.EARTH_RADIUS_KM / 2, rel=1e-12)
+    # antipodes are half a great circle
+    d = distance.haversine_matrix([0.0], [0.0], [0.0], [180.0])
+    assert d.iloc[0, 0] == pytest.approx(np.pi * distance.EARTH_RADIUS_KM, rel=1e-12)
+    # symmetric and zero on the diagonal
+    m = distance.haversine_matrix([33.6, 34.0], [-84.4, -83.3], [33.6, 34.0], [-84.4, -83.3])
+    assert np.allclose(np.diag(m.to_numpy()), 0.0) and np.allclose(m.to_numpy(), m.to_numpy().T)

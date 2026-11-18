@@ -30,8 +30,11 @@ def weighted_gini(values, weights=None) -> float:
 
 def share_below(access: pd.Series, population: pd.Series, threshold: float) -> float:
     """Share of the population living where accessibility is below a threshold
-    (e.g. a federal shortage-area ratio)."""
-    pop = population.reindex(access.index).astype(float)
+    (e.g. a federal shortage-area ratio). Locations with a missing access
+    value are left out of both the numerator and the denominator."""
+    known = access.dropna()
+    pop = population.reindex(known.index).astype(float)
+    access = known
     total = pop.sum()
     if total == 0:
         return 0.0
@@ -40,9 +43,10 @@ def share_below(access: pd.Series, population: pd.Series, threshold: float) -> f
 
 def group_summary(access: pd.Series, population: pd.Series, groups: pd.Series) -> pd.DataFrame:
     """Population-weighted mean accessibility and population for each group
-    (e.g. urban vs rural, or income quintile)."""
+    (e.g. urban vs rural, or income quintile). Locations with a missing access
+    value, population or group are left out."""
     df = pd.DataFrame({"access": access, "pop": population.reindex(access.index), "group": groups.reindex(access.index)})
-    df = df.dropna(subset=["group"])
+    df = df.dropna(subset=["group", "access", "pop"])
     df["wx"] = df["access"] * df["pop"]
     out = df.groupby("group", observed=True).agg(population=("pop", "sum"), wx=("wx", "sum"))
     out["weighted_mean_access"] = out["wx"] / out["population"]

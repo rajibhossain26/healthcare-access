@@ -24,7 +24,7 @@ classifiers = [
 dependencies = ["numpy>=1.22", "pandas>=1.5", "networkx>=2.8"]
 
 [project.optional-dependencies]
-osm = ["osmnx>=1.9"]
+osm = ["osmnx>=1.9", "scikit-learn>=1.0"]  # scikit-learn: nearest-node search on unprojected graphs
 examples = ["matplotlib>=3.6"]
 dev = ["pytest>=7"]
 

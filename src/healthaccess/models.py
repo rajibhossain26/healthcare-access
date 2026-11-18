@@ -151,8 +151,9 @@ def three_step_fca(
         R_j  = S_j / sum_i G_ij P_i W_ij             (step 2)
         A_i  = sum_j G_ij R_j W_ij                   (step 3)
 
-    ``W`` is stepwise decay by default (as in the original paper); pass
-    ``decay_fn`` to use any other decay. Like 2SFCA, total supply is
+    ``W`` defaults to the stepwise Enhanced 2SFCA zones (0-10, 10-20 and
+    20-30 minutes weighted 1.00, 0.68 and 0.22, Luo & Qi 2009), as also used
+    by PySAL ``access``; pass ``decay_fn`` to use any other decay. Like 2SFCA, total supply is
     conserved: sum_i P_i A_i equals the capacity of every provider with demand.
     """
     pop, cap, matrix = align(demand, supply, cost)
