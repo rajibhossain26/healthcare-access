@@ -87,8 +87,8 @@ def pysal_checks(seeds=(1, 2, 3)):
 
     for seed in seeds:
         d, s, c = problem(seed)
-        long = c.stack().rename("cost").reset_index()
-        long.columns = ["origin", "dest", "cost"]
+        long = (c.rename_axis(index="origin", columns="dest").stack().rename("cost")
+                .reset_index().dropna(subset=["cost"]))
         A = Access(demand_df=d.to_frame("pop"), demand_index=True, demand_value="pop",
                    supply_df=s.to_frame("doc"), supply_index=True, supply_value="doc",
                    cost_df=long, cost_origin="origin", cost_dest="dest", cost_name="cost")
