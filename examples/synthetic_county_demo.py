@@ -13,7 +13,9 @@ and provider counts, and ``cost`` with a drive-time matrix, for example from
 
 from pathlib import Path
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import numpy as np
 import pandas as pd
 
@@ -80,10 +82,28 @@ for ax, (name, col) in zip(axes[1:], results.items()):
     ax.set_title(name)
 fig.colorbar(im, ax=axes[1:], shrink=0.8, label="Physicians per 1,000 residents")
 
+def north_arrow(ax, x=0.9, y=0.9, length=0.12):
+    ax.annotate("", xy=(x, y), xytext=(x, y - length), xycoords="axes fraction",
+                arrowprops=dict(facecolor="white", edgecolor="black", width=2.5, headwidth=8, headlength=8))
+    ax.text(x, y + 0.01, "N", transform=ax.transAxes, ha="center", va="bottom", fontsize=10,
+            fontweight="bold", color="white", path_effects=[pe.withStroke(linewidth=2, foreground="black")])
+
+
+def scale_bar(ax, km=20, x=3.0, y=2.5, height=0.8):
+    """Two-segment scale bar in data units (the grid is in kilometres)."""
+    halo = [pe.withStroke(linewidth=2, foreground="black")]
+    for i, color in enumerate(["black", "white"]):
+        ax.add_patch(Rectangle((x + i * km / 2, y), km / 2, height, facecolor=color, edgecolor="black", linewidth=0.6))
+    for i, label in enumerate(["0", f"{km // 2}", f"{km} km"]):
+        ax.text(x + i * km / 2, y + height + 0.6, label, ha="center", va="bottom", fontsize=7.5, color="white", path_effects=halo)
+
+
 for ax in axes:
     ax.scatter(clinic_xy[:, 0], clinic_xy[:, 1], s=supply * 3, c="#e4572e", edgecolor="white", linewidth=0.6)
     ax.set_xticks([])
     ax.set_yticks([])
+    north_arrow(ax)
+    scale_bar(ax)
 
 out = Path(__file__).resolve().parents[1] / "docs" / "model_comparison.png"
 fig.savefig(out, dpi=90)
